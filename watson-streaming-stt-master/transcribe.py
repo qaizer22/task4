@@ -21,6 +21,9 @@ import json
 import threading
 import time
 from gtts import gTTS
+import json
+from ibm_watson import AssistantV2
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from playsound import playsound
 from gtts import gTTS
 import os
@@ -93,13 +96,39 @@ def read_audio(ws, timeout):
     print("* done recording")
     language = 'en'
     #print("test",LAST['results'][0]['alternatives'][0]['transcript'])
-    ff = open("response.txt", "r")
-    mytext = ff.read()
-    ff.close()
-    myobj = gTTS(text=mytext, lang=language, slow=False)
+    api = "iT9dBR0dCQs6cSNFCcChDJ5qiRlTZEiPJIWxodjPi-uy"
+    url = "https://api.us-south.assistant.watson.cloud.ibm.com/instances/98ba990f-9761-4e22-8078-2e9cc568b7e6"
+    authenticator = IAMAuthenticator(api)
+    assistant = AssistantV2(
+        version='2021-06-14',
+        authenticator=authenticator
+    )
+   # result =  LAST['results'][0]['alternatives'][0]['transcript']
 
+    fff = open("yourspeech.txt", "r")
+    inq = fff.read()
+    fff.close()
+    assistant.set_service_url(url)
+    ses = assistant.create_session(
+        assistant_id='ca1a5747-8f52-49d3-9b9f-2c7e17ad821e'
+    ).get_result()
+    response = assistant.message(
+        assistant_id='ca1a5747-8f52-49d3-9b9f-2c7e17ad821e',
+        session_id=ses['session_id'],
+        input={
+            'message_type': 'text',
+            'text': inq
+        }
+    ).get_result()
+    # print(ses['session_id'])
+    #print(response["output"]["generic"][0]["text"])
+    mytext = response["output"]["generic"][0]["text"]
+    myobj = gTTS(text=mytext, lang=language, slow=False)
+    f = open("response.txt", "w")
+    f.write(response["output"]["generic"][0]["text"])
+    f.close()
     myobj.save("response.mp3")
-    print("mp3 : ",myobj.text)
+
 
     playsound('response.mp3')
 
@@ -160,14 +189,14 @@ def on_close(ws):
     print("last : ",transcript)
     language = 'en'
 
-    mytext = transcript
-    myobj = gTTS(text=mytext, lang=language, slow=False)
-
-
-    myobj.save("welcome1.mp3")
-    print(myobj.text)
-
-    playsound('welcome.mp3')
+    # mytext = transcript
+    # myobj = gTTS(text=mytext, lang=language, slow=False)
+    #
+    #
+    # myobj.save("welcome1.mp3")
+    # print(myobj.text)
+    #
+    # playsound('welcome.mp3')
 
 
 
